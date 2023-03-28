@@ -247,6 +247,9 @@ protected:
     virtual void nodeSwap( Node<Key,Value>* n1, Node<Key,Value>* n2) ;
 
     // Add helper functions here
+		static Node<Key, Value>* successor(Node<Key, Value>* current);
+		void kuriaNoTasuke(Node<Key, Value> * root);
+		bool baransuNoTasuke(Node<Key, Value> * nood, int&kaunto) const;
 
 
 protected:
@@ -260,6 +263,8 @@ Begin implementations for the BinarySearchTree::iterator class.
 ---------------------------------------------------------------
 */
 
+
+
 /**
 * Explicit constructor that initializes an iterator with a given node pointer.
 */
@@ -267,6 +272,7 @@ template<class Key, class Value>
 BinarySearchTree<Key, Value>::iterator::iterator(Node<Key,Value> *ptr)
 {
     // TODO
+		current_ = ptr;
 }
 
 /**
@@ -276,7 +282,7 @@ template<class Key, class Value>
 BinarySearchTree<Key, Value>::iterator::iterator() 
 {
     // TODO
-
+		current_ = nullptr;
 }
 
 /**
@@ -309,6 +315,10 @@ BinarySearchTree<Key, Value>::iterator::operator==(
     const BinarySearchTree<Key, Value>::iterator& rhs) const
 {
     // TODO
+		if(current_ == rhs.current_) {
+			return true;
+		}
+		return false;
 }
 
 /**
@@ -321,7 +331,10 @@ BinarySearchTree<Key, Value>::iterator::operator!=(
     const BinarySearchTree<Key, Value>::iterator& rhs) const
 {
     // TODO
-
+		if(current_ == rhs.current_) {
+			return false;
+		}
+		return true;
 }
 
 
@@ -333,7 +346,8 @@ typename BinarySearchTree<Key, Value>::iterator&
 BinarySearchTree<Key, Value>::iterator::operator++()
 {
     // TODO
-
+		current_ = BinarySearchTree::successor(current_);
+		return *this;
 }
 
 
@@ -356,13 +370,14 @@ template<class Key, class Value>
 BinarySearchTree<Key, Value>::BinarySearchTree() 
 {
     // TODO
+		root_ = nullptr;
 }
 
 template<typename Key, typename Value>
 BinarySearchTree<Key, Value>::~BinarySearchTree()
 {
     // TODO
-
+		this->clear();
 }
 
 /**
@@ -444,8 +459,44 @@ Value const & BinarySearchTree<Key, Value>::operator[](const Key& key) const
 template<class Key, class Value>
 void BinarySearchTree<Key, Value>::insert(const std::pair<const Key, Value> &keyValuePair)
 {
-    // TODO
+		Node<Key, Value>* pog = new Node<Key, Value>(keyValuePair.first , keyValuePair.second, nullptr);
+		Node<Key, Value>* temp = root_;
+		if(root_==nullptr) {
+			root_ = pog;
+		}
+		else {
+			Node<Key, Value>* champ = internalFind(keyValuePair.first);
+			if(champ!=nullptr) {
+				delete pog;
+				champ->setValue(keyValuePair.second);
+				return;
+			}
+			while(temp != nullptr) {
+				if(keyValuePair.first < temp->getKey()) {
+					if(temp->getLeft() == nullptr) {
+						pog->setParent(temp);
+						temp->setLeft(pog);
+						return;
+					}
+					temp = temp->getLeft();
+				}
+				if(keyValuePair.first > temp->getKey()) {
+					if(temp->getRight() == nullptr) {
+						pog->setParent(temp);
+						temp->setRight(pog);
+						return;
+					}
+					temp = temp->getRight();
+				}
+			} 
+		}
 }
+
+
+
+
+
+
 
 
 /**
@@ -457,6 +508,60 @@ template<typename Key, typename Value>
 void BinarySearchTree<Key, Value>::remove(const Key& key)
 {
     // TODO
+		Node<Key, Value> * arimasen = this->internalFind(key);
+		if(arimasen != nullptr) {
+			if (arimasen->getLeft() != nullptr && arimasen->getRight()!=nullptr){
+				nodeSwap(arimasen, BinarySearchTree<Key,Value>::predecessor(arimasen));
+			}
+			if (arimasen->getLeft() == nullptr && arimasen->getRight()==nullptr) {
+				if(arimasen->getParent()==nullptr) {
+					root_=nullptr;
+					delete arimasen;
+				}
+				else if (arimasen == arimasen->getParent()->getLeft()) {
+					arimasen->getParent()->setLeft(nullptr) ;
+					delete arimasen;
+				}
+				else if(arimasen == arimasen->getParent()->getRight()) {
+					arimasen->getParent()->setRight(nullptr);
+					delete arimasen;
+				}
+			}
+			else if (arimasen->getLeft() != nullptr && arimasen->getRight()==nullptr) {
+				if(arimasen->getParent()==nullptr) {
+					arimasen->getLeft()->setParent(nullptr);
+					root_=arimasen->getLeft();
+					delete arimasen;
+				}
+				else if(arimasen == arimasen->getParent()->getLeft()) {
+					arimasen->getParent()->setLeft(arimasen->getLeft()) ;
+					arimasen->getLeft()->setParent(arimasen->getParent());
+					delete arimasen;
+				}
+				else if(arimasen == arimasen->getParent()->getRight()) {
+					arimasen->getParent()->setRight(arimasen->getLeft());
+					arimasen->getLeft()->setParent(arimasen->getParent());
+					delete arimasen;
+				}
+			}
+			else if (arimasen->getLeft() == nullptr && arimasen->getRight()!=nullptr) {
+				if(arimasen->getParent()==nullptr) {
+					arimasen->getRight()->setParent(nullptr);
+					root_=arimasen->getRight();
+					delete arimasen;
+				}
+				else if(arimasen == arimasen->getParent()->getLeft()) {
+					arimasen->getParent()->setLeft(arimasen->getRight());
+					arimasen->getRight()->setParent(arimasen->getParent());
+					delete arimasen;
+				}
+				else if(arimasen == arimasen->getParent()->getRight()) {
+					arimasen->getParent()->setRight(arimasen->getRight());
+					arimasen->getRight()->setParent(arimasen->getParent());
+					delete arimasen;
+				}
+			}
+		}
 }
 
 
@@ -466,6 +571,48 @@ Node<Key, Value>*
 BinarySearchTree<Key, Value>::predecessor(Node<Key, Value>* current)
 {
     // TODO
+	Node<Key,Value>* mae;
+	if(current->getLeft() != nullptr) {
+		mae = current->getLeft();
+		while(mae->getRight() != nullptr) {
+			mae = mae->getRight();
+		}
+		return mae;
+	}
+	else {
+		while(current->getParent() != nullptr) {
+			if(current->getParent()->getRight() == current) {
+				return current->getParent();
+			}
+			current= current->getParent();
+		}
+	}
+	return nullptr;
+
+}
+
+template<class Key, class Value>
+Node<Key, Value>*
+BinarySearchTree<Key, Value>::successor(Node<Key, Value>* current) 
+{
+	Node<Key, Value>* ato;
+	if(current->getRight() != nullptr) {
+		ato = current->getRight();
+		while(ato->getLeft() != nullptr) {
+			ato = ato->getLeft();
+		}
+		return ato;
+	}
+	else {
+		while(current->getParent() != nullptr) {
+			if(current->getParent()->getLeft() == current) {
+				return current->getParent();
+			}
+			current= current->getParent();
+		}
+	}
+	return nullptr;
+
 }
 
 
@@ -477,6 +624,20 @@ template<typename Key, typename Value>
 void BinarySearchTree<Key, Value>::clear()
 {
     // TODO
+		kuriaNoTasuke(root_);
+		root_ = nullptr;
+}
+
+template<typename Key, typename Value>
+void BinarySearchTree<Key, Value>::kuriaNoTasuke(Node<Key,Value>* root) {
+		if(root==nullptr) {
+
+		}
+		else {
+			kuriaNoTasuke(root->getLeft());
+			kuriaNoTasuke(root->getRight());
+			delete root;
+		}
 }
 
 
@@ -488,6 +649,14 @@ Node<Key, Value>*
 BinarySearchTree<Key, Value>::getSmallestNode() const
 {
     // TODO
+		if(root_ == nullptr) {
+			return nullptr;
+		}
+		Node<Key, Value> * chisaii = root_;
+		while(chisaii->getLeft() != nullptr) {
+			chisaii = chisaii->getLeft();
+		}
+		return chisaii;
 }
 
 /**
@@ -498,8 +667,26 @@ BinarySearchTree<Key, Value>::getSmallestNode() const
 template<typename Key, typename Value>
 Node<Key, Value>* BinarySearchTree<Key, Value>::internalFind(const Key& key) const
 {
-    // TODO
+	Node<Key, Value> * kensaku = root_;
+	// if(kensaku == nullptr) {
+	// 	return nullptr;
+	// }
+	// else {
+		while(kensaku != nullptr) {
+			if(kensaku->getKey() == key) {
+				return kensaku;
+			}
+			else if (key < kensaku->getKey()) {
+				kensaku = kensaku->getLeft();
+			}
+			else if (key > kensaku->getKey()){
+				kensaku = kensaku->getRight();
+			}
+		}
+	// }
+	return nullptr;
 }
+
 
 /**
  * Return true iff the BST is balanced.
@@ -508,6 +695,38 @@ template<typename Key, typename Value>
 bool BinarySearchTree<Key, Value>::isBalanced() const
 {
     // TODO
+		int kaunto = 0;
+		return baransuNoTasuke(root_, kaunto);
+}
+
+template<typename Key, typename Value>
+bool BinarySearchTree<Key, Value>::baransuNoTasuke(Node<Key, Value>* nood, int& kaunto) const {
+	  if(nood == nullptr) {
+        return true;
+    }
+    int migikaunto=0;
+    int hidarikaunto=0;
+    bool hidari = baransuNoTasuke(nood->left_, hidarikaunto);
+    bool migi = baransuNoTasuke(nood->right_, migikaunto);
+    if (hidari && migi) {
+        if(migikaunto==hidarikaunto || migikaunto == hidarikaunto-1 || migikaunto == hidarikaunto+1 || hidarikaunto == migikaunto -1  || hidarikaunto == migikaunto  + 1 ) {
+            if(hidarikaunto >= migikaunto) {
+                kaunto = hidarikaunto + 1;
+                return true;
+            }
+            else {
+                kaunto = migikaunto + 1;
+                return true;
+            }
+        }
+        else {
+            return false;
+        }
+    } 
+    else {
+        return false;
+    }
+    return false;
 }
 
 
