@@ -516,50 +516,44 @@ void BinarySearchTree<Key, Value>::remove(const Key& key)
 			if (arimasen->getLeft() == nullptr && arimasen->getRight()==nullptr) {
 				if(arimasen->getParent()==nullptr) {
 					root_=nullptr;
-					delete arimasen;
 				}
 				else if (arimasen == arimasen->getParent()->getLeft()) {
 					arimasen->getParent()->setLeft(nullptr) ;
-					delete arimasen;
 				}
 				else if(arimasen == arimasen->getParent()->getRight()) {
 					arimasen->getParent()->setRight(nullptr);
-					delete arimasen;
 				}
+				delete arimasen;
 			}
 			else if (arimasen->getLeft() != nullptr && arimasen->getRight()==nullptr) {
 				if(arimasen->getParent()==nullptr) {
 					arimasen->getLeft()->setParent(nullptr);
 					root_=arimasen->getLeft();
-					delete arimasen;
 				}
 				else if(arimasen == arimasen->getParent()->getLeft()) {
 					arimasen->getParent()->setLeft(arimasen->getLeft()) ;
 					arimasen->getLeft()->setParent(arimasen->getParent());
-					delete arimasen;
 				}
 				else if(arimasen == arimasen->getParent()->getRight()) {
 					arimasen->getParent()->setRight(arimasen->getLeft());
 					arimasen->getLeft()->setParent(arimasen->getParent());
-					delete arimasen;
 				}
+				delete arimasen;
 			}
 			else if (arimasen->getLeft() == nullptr && arimasen->getRight()!=nullptr) {
 				if(arimasen->getParent()==nullptr) {
 					arimasen->getRight()->setParent(nullptr);
 					root_=arimasen->getRight();
-					delete arimasen;
 				}
 				else if(arimasen == arimasen->getParent()->getLeft()) {
 					arimasen->getParent()->setLeft(arimasen->getRight());
 					arimasen->getRight()->setParent(arimasen->getParent());
-					delete arimasen;
 				}
 				else if(arimasen == arimasen->getParent()->getRight()) {
 					arimasen->getParent()->setRight(arimasen->getRight());
 					arimasen->getRight()->setParent(arimasen->getParent());
-					delete arimasen;
 				}
+				delete arimasen;
 			}
 		}
 }
@@ -628,7 +622,7 @@ void BinarySearchTree<Key, Value>::clear()
 		root_ = nullptr;
 }
 
-template<typename Key, typename Value>
+template<typename Key, typename Value> //I created this function because I wanted to just work directly with the root
 void BinarySearchTree<Key, Value>::kuriaNoTasuke(Node<Key,Value>* root) {
 		if(root==nullptr) {
 
@@ -652,11 +646,14 @@ BinarySearchTree<Key, Value>::getSmallestNode() const
 		if(root_ == nullptr) {
 			return nullptr;
 		}
-		Node<Key, Value> * chisaii = root_;
-		while(chisaii->getLeft() != nullptr) {
-			chisaii = chisaii->getLeft();
+		else {
+			Node<Key, Value> * chisaii = root_;
+			while(chisaii->getLeft() != nullptr) {
+				chisaii = chisaii->getLeft();
+			}
+			return chisaii;
 		}
-		return chisaii;
+		return nullptr;
 }
 
 /**
@@ -668,10 +665,6 @@ template<typename Key, typename Value>
 Node<Key, Value>* BinarySearchTree<Key, Value>::internalFind(const Key& key) const
 {
 	Node<Key, Value> * kensaku = root_;
-	// if(kensaku == nullptr) {
-	// 	return nullptr;
-	// }
-	// else {
 		while(kensaku != nullptr) {
 			if(kensaku->getKey() == key) {
 				return kensaku;
@@ -683,7 +676,6 @@ Node<Key, Value>* BinarySearchTree<Key, Value>::internalFind(const Key& key) con
 				kensaku = kensaku->getRight();
 			}
 		}
-	// }
 	return nullptr;
 }
 
@@ -699,7 +691,7 @@ bool BinarySearchTree<Key, Value>::isBalanced() const
 		return baransuNoTasuke(root_, kaunto);
 }
 
-template<typename Key, typename Value>
+template<typename Key, typename Value> // I more or less just took this one from my equal paths and adjusted it to also be valid whenever it is within 1 height instead of equal
 bool BinarySearchTree<Key, Value>::baransuNoTasuke(Node<Key, Value>* nood, int& kaunto) const {
 	  if(nood == nullptr) {
         return true;
