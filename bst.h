@@ -459,20 +459,20 @@ Value const & BinarySearchTree<Key, Value>::operator[](const Key& key) const
 template<class Key, class Value>
 void BinarySearchTree<Key, Value>::insert(const std::pair<const Key, Value> &keyValuePair)
 {
-		Node<Key, Value>* pog = new Node<Key, Value>(keyValuePair.first , keyValuePair.second, nullptr);
-		Node<Key, Value>* temp = root_;
-		if(root_==nullptr) {
+		Node<Key, Value>* pog = new Node<Key, Value>(keyValuePair.first , keyValuePair.second, nullptr); // this is the new node to be inserted
+		Node<Key, Value>* temp = root_; // this is a temporary node that stores root but can be changed for iteration
+		if(root_==nullptr) { // handles the case where the tree is empty
 			root_ = pog;
 		}
 		else {
 			Node<Key, Value>* champ = internalFind(keyValuePair.first);
-			if(champ!=nullptr) {
+			if(champ!=nullptr) { // if the node already exist it will replace the node's value
 				delete pog;
 				champ->setValue(keyValuePair.second);
 				return;
 			}
-			while(temp != nullptr) {
-				if(keyValuePair.first < temp->getKey()) {
+			while(temp != nullptr) { // if the node is found it will iterate until it reaches the next free child 
+				if(keyValuePair.first < temp->getKey()) { //checks if it should go down left tree
 					if(temp->getLeft() == nullptr) {
 						pog->setParent(temp);
 						temp->setLeft(pog);
@@ -480,7 +480,7 @@ void BinarySearchTree<Key, Value>::insert(const std::pair<const Key, Value> &key
 					}
 					temp = temp->getLeft();
 				}
-				if(keyValuePair.first > temp->getKey()) {
+				if(keyValuePair.first > temp->getKey()) { //checks if it should go down right tree
 					if(temp->getRight() == nullptr) {
 						pog->setParent(temp);
 						temp->setRight(pog);
