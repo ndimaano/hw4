@@ -247,9 +247,9 @@ protected:
     virtual void nodeSwap( Node<Key,Value>* n1, Node<Key,Value>* n2) ;
 
     // Add helper functions here
-		static Node<Key, Value>* successor(Node<Key, Value>* current);
-		void kuriaNoTasuke(Node<Key, Value> * root);
-		bool baransuNoTasuke(Node<Key, Value> * nood, int&kaunto) const;
+		static Node<Key, Value>* successor(Node<Key, Value>* current); // successor function told to implement
+		void kuriaNoTasuke(Node<Key, Value> * root); //clear helper that actually takes in a node and can be used to recurse
+		bool baransuNoTasuke(Node<Key, Value> * nood, int&kaunto) const; //balance helper pretty much just like the helper from equal-paths.cpp but changed to check for +-1
 
 
 protected:
@@ -272,7 +272,7 @@ template<class Key, class Value>
 BinarySearchTree<Key, Value>::iterator::iterator(Node<Key,Value> *ptr)
 {
     // TODO
-		current_ = ptr;
+		current_ = ptr; // current is storing the node we are currently on
 }
 
 /**
@@ -282,7 +282,7 @@ template<class Key, class Value>
 BinarySearchTree<Key, Value>::iterator::iterator() 
 {
     // TODO
-		current_ = nullptr;
+		current_ = nullptr; // this makes sure that after the iterator is done the pointer is reset for another iteration
 }
 
 /**
@@ -315,7 +315,7 @@ BinarySearchTree<Key, Value>::iterator::operator==(
     const BinarySearchTree<Key, Value>::iterator& rhs) const
 {
     // TODO
-		if(current_ == rhs.current_) {
+		if(current_ == rhs.current_) { //rhs is an iterator and we compare their stored values
 			return true;
 		}
 		return false;
@@ -331,7 +331,7 @@ BinarySearchTree<Key, Value>::iterator::operator!=(
     const BinarySearchTree<Key, Value>::iterator& rhs) const
 {
     // TODO
-		if(current_ == rhs.current_) {
+		if(current_ == rhs.current_) { // == operator with the return values flipped
 			return false;
 		}
 		return true;
@@ -346,7 +346,7 @@ typename BinarySearchTree<Key, Value>::iterator&
 BinarySearchTree<Key, Value>::iterator::operator++()
 {
     // TODO
-		current_ = BinarySearchTree::successor(current_);
+		current_ = BinarySearchTree::successor(current_); // moves the iterator to the next node in the tree(the successor)
 		return *this;
 }
 
@@ -370,14 +370,14 @@ template<class Key, class Value>
 BinarySearchTree<Key, Value>::BinarySearchTree() 
 {
     // TODO
-		root_ = nullptr;
+		root_ = nullptr; // intializes an empty tree
 }
 
 template<typename Key, typename Value>
 BinarySearchTree<Key, Value>::~BinarySearchTree()
 {
     // TODO
-		this->clear();
+		this->clear(); // clears the tree by calling the clear function
 }
 
 /**
@@ -508,48 +508,49 @@ template<typename Key, typename Value>
 void BinarySearchTree<Key, Value>::remove(const Key& key)
 {
     // TODO
-		Node<Key, Value> * arimasen = this->internalFind(key);
-		if(arimasen != nullptr) {
-			if (arimasen->getLeft() != nullptr && arimasen->getRight()!=nullptr){
+		Node<Key, Value> * arimasen = this->internalFind(key); // temporary node tracking the node that was searched for
+		if(arimasen != nullptr) { //handles the case where the node is in the tree 
+			if (arimasen->getLeft() != nullptr && arimasen->getRight()!=nullptr){ // flips the node to be removed with its predecessor when the removed node has two children
 				nodeSwap(arimasen, BinarySearchTree<Key,Value>::predecessor(arimasen));
 			}
-			if (arimasen->getLeft() == nullptr && arimasen->getRight()==nullptr) {
+			//the code above is called before the rest because after flipping them it becomes a case that can be handled by one of the cases below
+			if (arimasen->getLeft() == nullptr && arimasen->getRight()==nullptr) { // this handles the case where the node has no children
 				if(arimasen->getParent()==nullptr) {
 					root_=nullptr;
 				}
-				else if (arimasen == arimasen->getParent()->getLeft()) {
+				else if (arimasen == arimasen->getParent()->getLeft()) { // this removes the node from the parent if it is the parents left node
 					arimasen->getParent()->setLeft(nullptr) ;
 				}
-				else if(arimasen == arimasen->getParent()->getRight()) {
+				else if(arimasen == arimasen->getParent()->getRight()) { // this removes the node from the parent if it is the parents right ndoe
 					arimasen->getParent()->setRight(nullptr);
 				}
 				delete arimasen;
 			}
-			else if (arimasen->getLeft() != nullptr && arimasen->getRight()==nullptr) {
-				if(arimasen->getParent()==nullptr) {
+			else if (arimasen->getLeft() != nullptr && arimasen->getRight()==nullptr) { // this handles the case where the removed node only has a left child
+				if(arimasen->getParent()==nullptr) { // handles the case if the removed node has no parent
 					arimasen->getLeft()->setParent(nullptr);
 					root_=arimasen->getLeft();
 				}
-				else if(arimasen == arimasen->getParent()->getLeft()) {
+				else if(arimasen == arimasen->getParent()->getLeft()) { // handles the case if the removed node is a left child
 					arimasen->getParent()->setLeft(arimasen->getLeft()) ;
 					arimasen->getLeft()->setParent(arimasen->getParent());
 				}
-				else if(arimasen == arimasen->getParent()->getRight()) {
+				else if(arimasen == arimasen->getParent()->getRight()) { // handles the case if the removed node is a right child
 					arimasen->getParent()->setRight(arimasen->getLeft());
 					arimasen->getLeft()->setParent(arimasen->getParent());
 				}
 				delete arimasen;
 			}
-			else if (arimasen->getLeft() == nullptr && arimasen->getRight()!=nullptr) {
-				if(arimasen->getParent()==nullptr) {
+			else if (arimasen->getLeft() == nullptr && arimasen->getRight()!=nullptr) { // this handles the case where the removed node only has a right child
+				if(arimasen->getParent()==nullptr) { // handles the case if the removed node has no parent
 					arimasen->getRight()->setParent(nullptr);
 					root_=arimasen->getRight();
 				}
-				else if(arimasen == arimasen->getParent()->getLeft()) {
+				else if(arimasen == arimasen->getParent()->getLeft()) { // handles the case if the removed node is a left child
 					arimasen->getParent()->setLeft(arimasen->getRight());
 					arimasen->getRight()->setParent(arimasen->getParent());
 				}
-				else if(arimasen == arimasen->getParent()->getRight()) {
+				else if(arimasen == arimasen->getParent()->getRight()) { // handles the case if the removed node is a right child
 					arimasen->getParent()->setRight(arimasen->getRight());
 					arimasen->getRight()->setParent(arimasen->getParent());
 				}
@@ -565,16 +566,16 @@ Node<Key, Value>*
 BinarySearchTree<Key, Value>::predecessor(Node<Key, Value>* current)
 {
     // TODO
-	Node<Key,Value>* mae;
-	if(current->getLeft() != nullptr) {
-		mae = current->getLeft();
-		while(mae->getRight() != nullptr) {
+	Node<Key,Value>* mae; // node that stores the front(mae means forward or in front in japanese)
+	if(current->getLeft() != nullptr) { // handles the case where the node has a left child
+		mae = current->getLeft(); 
+		while(mae->getRight() != nullptr) { // we loop through the right children to find the largest of the left side
 			mae = mae->getRight();
 		}
 		return mae;
 	}
-	else {
-		while(current->getParent() != nullptr) {
+	else { // handles the case where the node is a right child
+		while(current->getParent() != nullptr) { // loops through the left children to find the smallest of the right side
 			if(current->getParent()->getRight() == current) {
 				return current->getParent();
 			}
@@ -618,7 +619,7 @@ template<typename Key, typename Value>
 void BinarySearchTree<Key, Value>::clear()
 {
     // TODO
-		kuriaNoTasuke(root_);
+		kuriaNoTasuke(root_); // call to recursive function that clears from the root
 		root_ = nullptr;
 }
 
@@ -643,13 +644,13 @@ Node<Key, Value>*
 BinarySearchTree<Key, Value>::getSmallestNode() const
 {
     // TODO
-		if(root_ == nullptr) {
+		if(root_ == nullptr) { // handles the case where the tree is empty
 			return nullptr;
 		}
-		else {
+		else { // handles the case where the tree has stuff
 			Node<Key, Value> * chisaii = root_;
-			while(chisaii->getLeft() != nullptr) {
-				chisaii = chisaii->getLeft();
+			while(chisaii->getLeft() != nullptr) { // loops through until it reaches the last left node, checks if it is the last left node by checking if it does not have a left child
+				chisaii = chisaii->getLeft(); 
 			}
 			return chisaii;
 		}
@@ -693,7 +694,7 @@ bool BinarySearchTree<Key, Value>::isBalanced() const
 
 template<typename Key, typename Value> // I more or less just took this one from my equal paths and adjusted it to also be valid whenever it is within 1 height instead of equal
 bool BinarySearchTree<Key, Value>::baransuNoTasuke(Node<Key, Value>* nood, int& kaunto) const {
-	  if(nood == nullptr) {
+	if(nood == nullptr) {
         return true;
     }
     int migikaunto=0;
