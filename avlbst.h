@@ -137,10 +137,10 @@ protected:
     virtual void nodeSwap( AVLNode<Key,Value>* n1, AVLNode<Key,Value>* n2);
 
     // Add helper functions here
-    void insertFix(AVLNode<Key,Value>* oya, AVLNode<Key,Value>* kodomo);
-		void removeFix(AVLNode<Key, Value>* nood, int nenDiff);
-		void rotateLeft(AVLNode<Key,Value>* kore);
-		void rotateRight(AVLNode<Key,Value>* kore); 
+    void insertFix(AVLNode<Key,Value>* oya, AVLNode<Key,Value>* kodomo); //helper function to rebalance after insert
+		void removeFix(AVLNode<Key, Value>* nood, int nenDiff); //helper function to rebalance after removal
+		void rotateLeft(AVLNode<Key,Value>* kore); //helper function for rotating left
+		void rotateRight(AVLNode<Key,Value>* kore); //helper function for rotating right
 
 
 };
@@ -153,7 +153,11 @@ template<class Key, class Value>
 void AVLTree<Key, Value>::insert (const std::pair<const Key, Value> &new_item)
 {
     // TODO
-    AVLNode<Key, Value>* pog = new AVLNode<Key, Value>(new_item.first , new_item.second, nullptr);
+		/*
+		more or less literally just copied my implementation of the bst insert function
+		and just made some changes to make this work for an AVL tree
+		*/
+    AVLNode<Key, Value>* pog = new AVLNode<Key, Value>(new_item.first , new_item.second, nullptr); // no need to set balance because the function call automatically makes it 0 if not specified
 		AVLNode<Key, Value>* temp = static_cast<AVLNode<Key,Value>*>(this->root_);
 		if(this->root_==nullptr) {
 			this->root_ = pog;
@@ -166,32 +170,32 @@ void AVLTree<Key, Value>::insert (const std::pair<const Key, Value> &new_item)
 				return;
 			}
 			while(temp != nullptr) {
-				if(new_item.first < temp->getKey()) {
+				if(new_item.first < temp->getKey()) { //handles the case where insert into left subtree
 					if(temp->getLeft() == nullptr) {
 						pog->setParent(temp);
 						temp->setLeft(pog);
-						if(pog->getParent()->getBalance()==-1 || pog->getParent()->getBalance()==1) {
-							pog->getParent()->setBalance(0);
+						if(pog->getParent()->getBalance()==-1 || pog->getParent()->getBalance()==1) { 
+							pog->getParent()->setBalance(0); // changes the balance to 0 to take into account the new node 
 						}
 						else if(pog->getParent()->getBalance()==0) {
 							if(pog==pog->getParent()->getLeft()) {
-								pog->getParent()->setBalance(-1);
+								pog->getParent()->setBalance(-1); //if the child is added to the left subtree the balance is -1 
 							}
 							else {
-								pog->getParent()->setBalance(1);
+								pog->getParent()->setBalance(1); //if the child is added to the right subtree the balance is 1
 							}
-							insertFix(pog->getParent(), pog);
+							insertFix(pog->getParent(), pog); //call to fix after insertion
 						}
 						return;
 					}
 					temp = temp->getLeft();
 				}
-				if(new_item.first > temp->getKey()) {
+				if(new_item.first > temp->getKey()) { // handles the case where insert into right subtree
 					if(temp->getRight() == nullptr) {
 						pog->setParent(temp);
 						temp->setRight(pog);
-						if(pog->getParent()->getBalance()==-1 || pog->getParent()->getBalance()==1) {
-							pog->getParent()->setBalance(0);
+						if(pog->getParent()->getBalance()==-1 || pog->getParent()->getBalance()==1) { 
+							pog->getParent()->setBalance(0); // changes the balance if the parent already has another node that isn't the inserted one
 						}
 						else if(pog->getParent()->getBalance()==0) {
 							if(pog==pog->getParent()->getLeft()) {
@@ -332,7 +336,11 @@ void AVLTree<Key,Value>::rotateRight(AVLNode<Key,Value>* z) {
 			z->setLeft(nullptr);
 		}
 
-
+		/*
+		After I set a node I have to check if it is a nullptr or not before
+		I change its parent pointer or else it will segfault and I did it in both left and right rotate 
+		but am noting it here because there is space and I am tired
+		*/
 
 
 
@@ -496,6 +504,9 @@ void AVLTree<Key,Value>::rotateLeft(AVLNode<Key,Value>* z) {
 
 template<class Key, class Value>
 void AVLTree<Key,Value>::insertFix(AVLNode<Key,Value>* oya, AVLNode<Key,Value>* kodomo) {
+	/*
+	basically just follows the implementation from the in class slides
+	*/
 	if(oya == nullptr || oya->getParent() == nullptr) {
 		return;
 	}
@@ -574,6 +585,9 @@ void AVLTree<Key,Value>::insertFix(AVLNode<Key,Value>* oya, AVLNode<Key,Value>* 
 
 template<class Key, class Value>
 void AVLTree<Key,Value>::removeFix(AVLNode<Key, Value>* nood, int nenDiff) {
+	/*
+	basically just follows the implementation from the in class slide
+	*/
 	if(nood == nullptr) {
 		return;
 	}
@@ -602,8 +616,8 @@ void AVLTree<Key,Value>::removeFix(AVLNode<Key, Value>* nood, int nenDiff) {
 	// 	c = nood->getLeft();
 	// }
 
-	if(nenDiff==-1) {
-		if(nood->getBalance() + nenDiff == -2) {
+	if(nenDiff==-1) { // handles the case where the removal is in the left subtree
+		if(nood->getBalance() + nenDiff == -2) { // handles a left subtree imbalance
 			AVLNode<Key, Value>* c = nood->getLeft();
 			if(c->getBalance() == -1) {
 				rotateRight(nood);
@@ -618,8 +632,8 @@ void AVLTree<Key,Value>::removeFix(AVLNode<Key, Value>* nood, int nenDiff) {
 			}
 			else if(c->getBalance()==1) {
 				AVLNode<Key, Value>* g = c->getRight();
-				rotateLeft(c);
-				rotateRight(nood);
+				rotateLeft(c); // zig
+				rotateRight(nood); //zag
 				if(g->getBalance()==1) {
 					nood->setBalance(0);
 					c->setBalance(-1);
@@ -639,7 +653,7 @@ void AVLTree<Key,Value>::removeFix(AVLNode<Key, Value>* nood, int nenDiff) {
 			}
 		}
 		else if (nood->getBalance() + nenDiff == -1) {
-			nood->setBalance(-1);
+			nood->setBalance(-1); //balanced so done
 		}
 		else if (nood->getBalance() + nenDiff == 0) {
 			nood->setBalance(0);
@@ -663,8 +677,8 @@ void AVLTree<Key,Value>::removeFix(AVLNode<Key, Value>* nood, int nenDiff) {
 		}
 		else if(c->getBalance()==-1) {
 			AVLNode<Key, Value>* g = c->getLeft();
-			rotateRight(c);
-			rotateLeft(nood);
+			rotateRight(c); // zag
+			rotateLeft(nood); //zig
 			if(g->getBalance()==1) {
 				nood->setBalance(-1);
 				c->setBalance(0);
@@ -680,16 +694,16 @@ void AVLTree<Key,Value>::removeFix(AVLNode<Key, Value>* nood, int nenDiff) {
 				c->setBalance(1);
 				g->setBalance(0);
 			}
-			removeFix(oya,diff);
+			removeFix(oya,diff);// recursive call
 		}
 
 	}
 	else if (nood->getBalance() + nenDiff == 1) {
-		nood->setBalance(1);
+		nood->setBalance(1); // balanced so done
 	}
 	else if (nood->getBalance() + nenDiff == 0) {
 		nood->setBalance(0);
-		removeFix(oya, diff);
+		removeFix(oya, diff); //recursive call
 	}
 }
 }
